@@ -30,6 +30,7 @@
     "@types/node": "^18.15.3",
     "@types/supertest": "^2.0.12",
     "eslint": "^8.36.0",
+    "sqlite3": "^5.1.6",
     "supertest": "^6.3.3",
     "tsup": "^6.6.3",
     "tsx": "^3.12.5",
