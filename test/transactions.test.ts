@@ -91,4 +91,43 @@ describe('Transactions routes', () => {
       }),
     )
   })
+
+  it('should be able to get the summary', async () => {
+    const CREDIT_AMOUNT = 5000
+    const DEBIT_AMOUNT = 1000
+
+    const SUMMARY_AMOUNT = CREDIT_AMOUNT - DEBIT_AMOUNT
+
+    const createCreditTransactionResponse = await request(app.server)
+      .post('/transactions')
+      .send({
+        title: 'New transaction',
+        amount: CREDIT_AMOUNT,
+        type: 'credit',
+      })
+
+    const cookies = createCreditTransactionResponse.get('Set-Cookie')
+
+    await request(app.server)
+      .post('/transactions')
+      .send({
+        title: 'New transaction',
+        amount: DEBIT_AMOUNT,
+        type: 'debit',
+      })
+      .set('Cookie', cookies)
+
+    const summaryTransactionsResponse = await request(app.server)
+      .get('/transactions/summary')
+      .set('Cookie', cookies)
+      .expect(200)
+
+    expect(summaryTransactionsResponse.body).toEqual(
+      expect.objectContaining({
+        summary: expect.objectContaining({
+          amount: SUMMARY_AMOUNT,
+        }),
+      }),
+    )
+  })
 })
