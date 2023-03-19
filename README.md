@@ -10,5 +10,5 @@
 ## NFR
 
 - [x] The transaction can be of the credit type that will add to the total amount, or debit will subtract;
-- [ ] It must be possible to identify the user among the requests;
-- [ ] User can only view transactions which he created;
+- [x] It must be possible to identify the user among the requests;
+- [x] User can only view transactions which he created;
