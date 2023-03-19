@@ -3,33 +3,66 @@ import { z } from 'zod'
 import { FastifyInstance } from 'fastify'
 
 import { knex } from '../database'
+import { checkSessionIdExists } from '../middlewares/check-session-id-exists'
 
 export async function transactionsRoutes(app: FastifyInstance) {
-  app.get('/', async () => {
-    const transactions = await knex('transactions').select()
+  app.get(
+    '/',
+    {
+      preHandler: [checkSessionIdExists],
+    },
+    async (req) => {
+      const { sessionId } = req.cookies
+
+      const transactions = await knex('transactions')
+        .where('session_id', sessionId)
+        .select()
 
     return { transactions }
-  })
+    },
+  )
 
-  app.get('/:id', async (req) => {
+  app.get(
+    '/:id',
+    {
+      preHandler: [checkSessionIdExists],
+    },
+    async (req) => {
+      const { sessionId } = req.cookies
+
     const getTransactionsParamsSchema = z.object({
       id: z.string().uuid(),
     })
 
     const { id } = getTransactionsParamsSchema.parse(req.params)
 
-    const transaction = await knex('transactions').where('id', id).first()
+      const transaction = await knex('transactions')
+        .where({
+          id,
+          session_id: sessionId,
+        })
+        .first()
 
     return { transaction }
-  })
+    },
+  )
 
-  app.get('/summary', async () => {
+  app.get(
+    '/summary',
+    {
+      preHandler: [checkSessionIdExists],
+    },
+    async (req) => {
+      const { sessionId } = req.cookies
+
     const summary = await knex('transactions')
+        .where('session_id', sessionId)
       .sum('amount', { as: 'amount' })
       .first()
 
     return { summary }
-  })
+    },
+  )
 
   app.post('/', async (req, reply) => {
     const createTransactionsBodySchema = z.object({
@@ -40,7 +73,7 @@ export async function transactionsRoutes(app: FastifyInstance) {
 
     const { title, amount, type } = createTransactionsBodySchema.parse(req.body)
 
-    let sessionId = req.cookies.sessionId
+    let { sessionId } = req.cookies
 
     if (!sessionId) {
       sessionId = crypto.randomUUID()
